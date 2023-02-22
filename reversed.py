@@ -2,51 +2,47 @@ def reverse_python_statement(statement):
     """
     Reverses the evaluation of a Python statement.
     """
-    # Check if the statement has 'not' in it
-    if 'not' in statement:
-        # Split the statement into parts
-        parts = statement.split(' ')
-        
-        # Check if the negation is inside parentheses
-        if '(' in statement and ')' in statement:
-            # Find the indexes of the parentheses
-            left_paren_idx = statement.find('(')
-            right_paren_idx = statement.rfind(')')
-            
-            # Extract the expression inside the parentheses
-            inner_expr = statement[left_paren_idx+1:right_paren_idx]
-            
-            # Reverse the expression inside the parentheses
-            reversed_inner_expr = reverse_python_statement(inner_expr)
-            
-            # Replace the inner expression in the original statement
-            new_statement = statement[:left_paren_idx+1] + reversed_inner_expr + statement[right_paren_idx:]
-            
-            # Recursively reverse the remaining parts of the statement
-            return reverse_python_statement(new_statement)
+    # Define a stack to hold the parts of the statement
+    stack = []
+    
+    # Split the statement into tokens
+    tokens = statement.split()
+    
+    # Process each token
+    for token in tokens:
+        # Check if the token is a negation
+        if token == 'not':
+            # Negate the previous token and push it onto the stack
+            prev_token = stack.pop()
+            if prev_token.startswith('(') and prev_token.endswith(')'):
+                prev_token = reverse_python_statement(prev_token[1:-1])
+            stack.append(f"not {prev_token}")
+        # Check if the token is a comparison operator
+        elif token in ['==', '!=', '<', '>', '<=', '>=']:
+            # Pop the previous two tokens and create a new expression with the comparison operator reversed
+            right_operand = stack.pop()
+            left_operand = stack.pop()
+            stack.append(f"{left_operand} {reverse_operator(token)} {right_operand}")
+        # Otherwise, push the token onto the stack
         else:
-            # Remove 'not' and return the remaining statement
-            return statement.replace('not ', '')
+            stack.append(token)
     
-    # Check if the statement contains a comparison operator
-    if '==' in statement:
-        parts = statement.split('==')
-        return f"{parts[0]} != {parts[1]}"
-    elif '!=' in statement:
-        parts = statement.split('!=')
-        return f"{parts[0]} == {parts[1]}"
-    elif '<=' in statement:
-        parts = statement.split('<=')
-        return f"{parts[0]} > {parts[1]}"
-    elif '>=' in statement:
-        parts = statement.split('>=')
-        return f"{parts[0]} < {parts[1]}"
-    elif '<' in statement:
-        parts = statement.split('<')
-        return f"{parts[0]} >= {parts[1]}"
-    elif '>' in statement:
-        parts = statement.split('>')
-        return f"{parts[0]} <= {parts[1]}"
-    
-    # Negate the boolean value
-    return f"not {statement}"
+    # Combine the tokens on the stack into a single string
+    return ' '.join(stack)
+
+def reverse_operator(operator):
+    """
+    Returns the reverse of a comparison operator.
+    """
+    if operator == '==':
+        return '!='
+    elif operator == '!=':
+        return '=='
+    elif operator == '<':
+        return '>='
+    elif operator == '>':
+        return '<='
+    elif operator == '<=':
+        return '>'
+    elif operator == '>=':
+        return '<'

@@ -1,34 +1,37 @@
+import ast
+
 def reverse_python_statement(statement):
     """
     Reverses the evaluation of a Python statement.
     """
-    # Define a stack to hold the parts of the statement
-    stack = []
+    # Parse the statement into an abstract syntax tree
+    tree = ast.parse(statement)
     
-    # Split the statement into tokens
-    tokens = statement.split()
-    
-    # Process each token
-    for token in tokens:
-        # Check if the token is a negation
-        if token == 'not':
-            # Negate the previous token and push it onto the stack
-            prev_token = stack.pop()
-            if prev_token.startswith('(') and prev_token.endswith(')'):
-                prev_token = reverse_python_statement(prev_token[1:-1])
-            stack.append(f"not {prev_token}")
-        # Check if the token is a comparison operator
-        elif token in ['==', '!=', '<', '>', '<=', '>=']:
-            # Pop the previous two tokens and create a new expression with the comparison operator reversed
-            right_operand = stack.pop()
-            left_operand = stack.pop()
-            stack.append(f"{left_operand} {reverse_operator(token)} {right_operand}")
-        # Otherwise, push the token onto the stack
+    # Traverse the tree and modify the nodes
+    def traverse(node):
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            # If the node is a negation, remove the negation and process the operand
+            return traverse(node.operand)
+        elif isinstance(node, ast.Compare):
+            # If the node is a comparison, reverse the operator and swap the left and right operands
+            left_operand = ast.unparse(node.left).strip()
+            right_operand = ast.unparse(node.comparators[0]).strip()
+            operator = reverse_operator(ast.unparse(node.ops[0]).strip())
+            return ast.parse(f"{right_operand} {operator} {left_operand}").body[0].value
+        elif isinstance(node, ast.BoolOp) and isinstance(node.op, ast.And):
+            # If the node is a conjunction, recursively process the left and right operands and swap them
+            left_operand = traverse(node.values[0])
+            right_operand = traverse(node.values[1])
+            return ast.BoolOp(op=ast.And(), values=[right_operand, left_operand])
         else:
-            stack.append(token)
+            # Otherwise, return the original node
+            return node
     
-    # Combine the tokens on the stack into a single string
-    return ' '.join(stack)
+    # Traverse the tree and generate the modified statement
+    modified_tree = traverse(tree)
+    modified_statement = ast.unparse(modified_tree).strip()
+    
+    return modified_statement
 
 def reverse_operator(operator):
     """

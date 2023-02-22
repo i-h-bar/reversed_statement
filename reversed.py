@@ -11,7 +11,12 @@ def reverse_python_statement(statement):
     def traverse(node):
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
             # If the node is a negation, remove the negation and process the operand
-            return traverse(node.operand)
+            operand = traverse(node.operand)
+            if isinstance(operand, ast.UnaryOp) and isinstance(operand.op, ast.Not):
+                # If the operand is also a negation, remove the double negation
+                return operand.operand
+            else:
+                return ast.UnaryOp(op=ast.Not(), operand=operand)
         elif isinstance(node, ast.Compare):
             # If the node is a comparison, reverse the operator and swap the left and right operands
             left_operand = ast.unparse(node.left).strip()

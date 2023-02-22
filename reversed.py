@@ -27,24 +27,26 @@ def reverse_python_statement(statement):
         else:
             # Remove 'not' and return the remaining statement
             return statement.replace('not ', '')
-    else:
-        # Split the statement into left and right parts
-        parts = statement.split(' ')
-        left, op, right = parts[0], parts[1], ' '.join(parts[2:])
-        
-        # Reverse the operator if it is a comparison operator
-        if op == '==':
-            op = '!='
-        elif op == '!=':
-            op = '=='
-        elif op == '<':
-            op = '>='
-        elif op == '>':
-            op = '<='
-        elif op == '<=':
-            op = '>'
-        elif op == '>=':
-            op = '<'
-        
-        # Return the reversed statement
-        return f"{left} {op} {right}"
+    
+    # Check if the statement contains a comparison operator
+    if '==' in statement:
+        parts = statement.split('==')
+        return f"{parts[0]} != {parts[1]}"
+    elif '!=' in statement:
+        parts = statement.split('!=')
+        return f"{parts[0]} == {parts[1]}"
+    elif '<=' in statement:
+        parts = statement.split('<=')
+        return f"{parts[0]} > {parts[1]}"
+    elif '>=' in statement:
+        parts = statement.split('>=')
+        return f"{parts[0]} < {parts[1]}"
+    elif '<' in statement:
+        parts = statement.split('<')
+        return f"{parts[0]} >= {parts[1]}"
+    elif '>' in statement:
+        parts = statement.split('>')
+        return f"{parts[0]} <= {parts[1]}"
+    
+    # Negate the boolean value
+    return f"not {statement}"
